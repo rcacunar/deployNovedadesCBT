@@ -3,7 +3,6 @@ import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { io } from 'socket.io-client';
 
-// Conexión a Socket.IO en el backend
 const socket = io('http://localhost:3001');
 
 const NovedadesList = () => {
@@ -35,6 +34,19 @@ const NovedadesList = () => {
     };
   }, []);
 
+  const getPrioridadLabel = (valor) => {
+    switch (valor) {
+      case 1:
+        return 'Alta';
+      case 2:
+        return 'Media';
+      case 3:
+        return 'Baja';
+      default:
+        return valor;
+    }
+  };
+
   return (
     <div className="p-6">
       <h1 className="text-3xl font-bold text-center mb-6">Novedades</h1>
@@ -47,7 +59,7 @@ const NovedadesList = () => {
             <h2 className="text-xl font-semibold mb-2">{novedad.titulo}</h2>
             <p className="text-gray-700 mb-2">{novedad.descripcion}</p>
             <p className="text-sm text-gray-500">
-              <span className="font-medium">Prioridad:</span> {novedad.prioridad}
+              <span className="font-medium">Prioridad:</span> {getPrioridadLabel(novedad.prioridad)}
             </p>
             <p className="text-sm text-gray-500">
               <span className="font-medium">Caduca:</span> {novedad.fechaCaducidad}

@@ -43,7 +43,7 @@ app.get('/novedades', async (req, res) => {
   try {
     const query = `
       SELECT *
-      FROM novedades
+      FROM cbt.novedades
       WHERE fechaCaducidad >= CURRENT_DATE
       ORDER BY prioridad ASC
     `;
@@ -60,7 +60,7 @@ app.post('/novedades', async (req, res) => {
   const { titulo, descripcion, prioridad, fechaCaducidad } = req.body;
   try {
     const query = `
-      INSERT INTO novedades (titulo, descripcion, prioridad, fechaCaducidad)
+      INSERT INTO cbt.novedades (titulo, descripcion, prioridad, fechaCaducidad)
       VALUES ($1, $2, $3, $4)
       RETURNING *
     `;
@@ -81,7 +81,7 @@ app.post('/novedades', async (req, res) => {
 app.delete('/novedades/:id', async (req, res) => {
   const id = req.params.id;
   try {
-    const query = 'DELETE FROM novedades WHERE id = $1';
+    const query = 'DELETE FROM cbt.novedades WHERE id = $1';
     await pool.query(query, [id]);
 
     // Emitir un evento a todos los clientes: se ha eliminado la novedad

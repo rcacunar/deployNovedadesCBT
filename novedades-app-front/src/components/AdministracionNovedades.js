@@ -10,7 +10,7 @@ const AdministracionNovedades = () => {
   const [nuevaNovedad, setNuevaNovedad] = useState({
     titulo: '',
     descripcion: '',
-    prioridad: '',
+    prioridad: '1',  // Valor por defecto (Alta)
     fechaCaducidad: '',
   });
 
@@ -50,11 +50,13 @@ const AdministracionNovedades = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      await axios.post('http://localhost:3001/novedades', nuevaNovedad);
+      // Nota: Asegúrate de enviar la prioridad como número
+      const novedadParaEnviar = { ...nuevaNovedad, prioridad: parseInt(nuevaNovedad.prioridad) };
+      await axios.post('http://localhost:3001/novedades', novedadParaEnviar);
       setNuevaNovedad({
         titulo: '',
         descripcion: '',
-        prioridad: '',
+        prioridad: '1',
         fechaCaducidad: '',
       });
     } catch (error) {
@@ -99,15 +101,18 @@ const AdministracionNovedades = () => {
           />
         </div>
         <div className="mb-4">
-          <input
-            type="number"
+          {/* Campo select para la prioridad */}
+          <select
             name="prioridad"
-            placeholder="Prioridad"
             value={nuevaNovedad.prioridad}
             onChange={handleInputChange}
             required
             className="w-full px-3 py-2 border border-gray-300 rounded"
-          />
+          >
+            <option value="1">Alta</option>
+            <option value="2">Media</option>
+            <option value="3">Baja</option>
+          </select>
         </div>
         <div className="mb-4">
           <input
@@ -140,7 +145,14 @@ const AdministracionNovedades = () => {
                 <h3 className="text-xl font-bold">{novedad.titulo}</h3>
                 <p className="text-gray-700">{novedad.descripcion}</p>
                 <p className="text-sm text-gray-500">
-                  <span className="font-medium">Prioridad:</span> {novedad.prioridad}
+                  <span className="font-medium">Prioridad:</span> {
+                    // Mapeo para mostrar la etiqueta en lugar del número
+                    novedad.prioridad === 1
+                      ? 'Alta'
+                      : novedad.prioridad === 2
+                      ? 'Media'
+                      : 'Baja'
+                  }
                 </p>
                 <p className="text-sm text-gray-500">
                   <span className="font-medium">Caduca:</span> {novedad.fechaCaducidad}

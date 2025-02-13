@@ -9,7 +9,7 @@ function App() {
     <Router>
       <nav className="bg-gray-800 p-4">
         <div className="container mx-auto flex justify-between items-center">
-          <h1 className="text-white font-bold text-2xl">Mi App de Novedades</h1>
+          <h1 className="text-white font-bold text-2xl">Novedades Central CBT</h1>
           <div>
             <Link to="/" className="text-gray-300 hover:text-white mx-2">
               Novedades
