@@ -31,6 +31,18 @@ const getPriorityLabel = (valor) => {
   }
 };
 
+// Función para formatear la fecha en formato DD/MM/YYYY
+const formatDate = (dateString) => {
+  if (!dateString) return 'Fecha no disponible';
+  const date = new Date(dateString);
+  if (isNaN(date.getTime())) return 'Fecha no válida';
+  return date.toLocaleDateString('es-ES', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric'
+  });
+};
+
 const NovedadesList = () => {
   const [novedades, setNovedades] = useState([]);
   const [selectedNovedad, setSelectedNovedad] = useState(null);
@@ -69,11 +81,15 @@ const NovedadesList = () => {
     setSelectedNovedad(null);
   };
 
+  // Filtrar las novedades no caducadas: se muestra solo si la fecha es mayor o igual a la fecha actual
+  const currentDate = new Date();
+  const validNovedades = novedades.filter(nov => new Date(nov.fechacaducidad) >= currentDate);
+
   return (
     <div className="p-6">
       <h1 className="text-3xl font-bold text-center mb-6">Novedades</h1>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {novedades.map((novedad) => (
+        {validNovedades.map((novedad) => (
           <div
             key={novedad.id}
             className={`cursor-pointer shadow rounded-lg p-4 border ${getPriorityClasses(novedad.prioridad)}`}
@@ -85,12 +101,13 @@ const NovedadesList = () => {
               <span className="font-medium">Prioridad:</span> {getPriorityLabel(novedad.prioridad)}
             </p>
             <p className="text-sm text-gray-500">
-              <span className="font-medium">Caduca:</span> {novedad.fechaCaducidad}
+              <span className="font-medium">Caduca:</span> {formatDate(novedad.fechacaducidad)}
             </p>
           </div>
         ))}
       </div>
 
+      {/* Modal: Popup para mostrar el contenido completo de la novedad */}
       {selectedNovedad && (
         <div
           className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50"
@@ -112,9 +129,8 @@ const NovedadesList = () => {
               <span className="font-medium">Prioridad:</span> {getPriorityLabel(selectedNovedad.prioridad)}
             </div>
             <div className="mb-4">
-              <span className="font-medium">Caduca:</span> {selectedNovedad.fechaCaducidad}
+              <span className="font-medium">Caduca:</span> {formatDate(selectedNovedad.fechacaducidad)}
             </div>
-            {/* El siguiente div mostrará la descripción con saltos de línea respetados */}
             <div
               className="description-content"
               style={{ whiteSpace: 'pre-wrap' }}
