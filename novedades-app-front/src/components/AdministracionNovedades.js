@@ -2,21 +2,24 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { io } from 'socket.io-client';
+import { CKEditor } from '@ckeditor/ckeditor5-react';
+import ClassicEditor from '@ckeditor/ckeditor5-build-classic';
 
-const socket = io('http://localhost:3001');
+const socket = io('http://localhost:3002');
 
 const AdministracionNovedades = () => {
   const [novedades, setNovedades] = useState([]);
   const [nuevaNovedad, setNuevaNovedad] = useState({
     titulo: '',
-    descripcion: '',
-    prioridad: '1',  // Valor por defecto (Alta)
+    resumen: '',
+    descripcion: '', // Se usará CKEditor para este campo
+    prioridad: '1',  // Valor por defecto: Alta
     fechaCaducidad: '',
   });
 
   const fetchNovedades = async () => {
     try {
-      const response = await axios.get('http://localhost:3001/novedades');
+      const response = await axios.get('http://localhost:3002/novedades');
       setNovedades(response.data);
     } catch (error) {
       console.error('Error al obtener las novedades:', error);
@@ -47,14 +50,28 @@ const AdministracionNovedades = () => {
     });
   };
 
+  // Actualiza el contenido enriquecido desde CKEditor
+  const handleEditorChange = (event, editor) => {
+    const data = editor.getData();
+    setNuevaNovedad({
+      ...nuevaNovedad,
+      descripcion: data,
+    });
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      // Nota: Asegúrate de enviar la prioridad como número
-      const novedadParaEnviar = { ...nuevaNovedad, prioridad: parseInt(nuevaNovedad.prioridad) };
-      await axios.post('http://localhost:3001/novedades', novedadParaEnviar);
+      // Convertir la prioridad a número antes de enviarla
+      const novedadParaEnviar = {
+        ...nuevaNovedad,
+        prioridad: parseInt(nuevaNovedad.prioridad),
+      };
+      await axios.post('http://localhost:3002/novedades', novedadParaEnviar);
+      // Reinicia el formulario
       setNuevaNovedad({
         titulo: '',
+        resumen: '',
         descripcion: '',
         prioridad: '1',
         fechaCaducidad: '',
@@ -66,7 +83,7 @@ const AdministracionNovedades = () => {
 
   const handleDelete = async (id) => {
     try {
-      await axios.delete(`http://localhost:3001/novedades/${id}`);
+      await axios.delete(`http://localhost:3002/novedades/${id}`);
     } catch (error) {
       console.error('Error al eliminar la novedad:', error);
     }
@@ -90,18 +107,31 @@ const AdministracionNovedades = () => {
             className="w-full px-3 py-2 border border-gray-300 rounded"
           />
         </div>
+        {/* Campo Resumen */}
         <div className="mb-4">
           <textarea
-            name="descripcion"
-            placeholder="Descripción"
-            value={nuevaNovedad.descripcion}
+            name="resumen"
+            placeholder="Resumen"
+            value={nuevaNovedad.resumen}
             onChange={handleInputChange}
             required
             className="w-full px-3 py-2 border border-gray-300 rounded"
           />
         </div>
+        {/* Campo Descripción con CKEditor */}
         <div className="mb-4">
-          {/* Campo select para la prioridad */}
+          <CKEditor
+            editor={ClassicEditor}
+            data={nuevaNovedad.descripcion}
+            onChange={handleEditorChange}
+            config={{
+              licenseKey: 'GPL',
+              placeholder: 'Escribe la descripción enriquecida...',
+            }}
+          />
+        </div>
+        {/* Campo Select para Prioridad */}
+        <div className="mb-4">
           <select
             name="prioridad"
             value={nuevaNovedad.prioridad}
@@ -133,6 +163,7 @@ const AdministracionNovedades = () => {
         </button>
       </form>
 
+      {/* Listado de novedades (opcional) */}
       <div className="max-w-3xl mx-auto">
         <h2 className="text-2xl font-semibold mb-4">Listado de Novedades</h2>
         <ul>
@@ -143,16 +174,14 @@ const AdministracionNovedades = () => {
             >
               <div>
                 <h3 className="text-xl font-bold">{novedad.titulo}</h3>
-                <p className="text-gray-700">{novedad.descripcion}</p>
+                <p className="text-gray-700">{novedad.resumen}</p>
                 <p className="text-sm text-gray-500">
-                  <span className="font-medium">Prioridad:</span> {
-                    // Mapeo para mostrar la etiqueta en lugar del número
-                    novedad.prioridad === 1
-                      ? 'Alta'
-                      : novedad.prioridad === 2
-                      ? 'Media'
-                      : 'Baja'
-                  }
+                  <span className="font-medium">Prioridad:</span>{' '}
+                  {novedad.prioridad === 1
+                    ? 'Alta'
+                    : novedad.prioridad === 2
+                    ? 'Media'
+                    : 'Baja'}
                 </p>
                 <p className="text-sm text-gray-500">
                   <span className="font-medium">Caduca:</span> {novedad.fechaCaducidad}
