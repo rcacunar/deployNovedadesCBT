@@ -75,7 +75,10 @@ const AdministracionNovedades = () => {
 
   const handleDelete = async (id) => {
     try {
-      await axios.delete(`http://localhost:3002/novedades/${id}`);
+      const token = localStorage.getItem('token');
+      await axios.delete(`http://localhost:3002/novedades/${id}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
     } catch (error) {
       console.error('Error al eliminar novedad:', error);
     }
@@ -107,6 +110,7 @@ const AdministracionNovedades = () => {
     setEditingNovedad({ ...editingNovedad, descripcion: data });
   };
 
+  // Al enviar la edición, se incluye el token de autenticación
   const handleEditSubmit = async (e) => {
     e.preventDefault();
     try {
@@ -114,7 +118,10 @@ const AdministracionNovedades = () => {
         ...editingNovedad,
         prioridad: parseInt(editingNovedad.prioridad),
       };
-      await axios.put(`http://localhost:3002/novedades/${editingNovedad.id}`, updatedNovedad);
+      const token = localStorage.getItem('token');
+      await axios.put(`http://localhost:3002/novedades/${editingNovedad.id}`, updatedNovedad, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
       setNovedades((prev) =>
         prev.map((nov) => (nov.id === updatedNovedad.id ? updatedNovedad : nov))
       );
@@ -170,7 +177,7 @@ const AdministracionNovedades = () => {
       <h1 className="text-3xl font-bold text-center mb-6">Administración de Novedades</h1>
 
       {/* Formulario para agregar una nueva novedad */}
-      <form onSubmit={handleSubmit} className="w-full w-full p-4 bg-white rounded shadow mb-8">
+      <form onSubmit={handleSubmit} className="w-full p-4 bg-white rounded shadow mb-8">
         <div className="mb-4">
           <input
             type="text"

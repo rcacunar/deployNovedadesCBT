@@ -96,7 +96,7 @@ const NovedadesList = () => {
             onClick={() => handleCardClick(novedad)}
           >
             <h2 className="text-xl font-semibold mb-2">{novedad.titulo}</h2>
-            <p className="text-gray-700 mb-2">{novedad.resumen}</p>
+            <p className="text-gray-700 mb-2">Resumen: {novedad.resumen}</p>
             <p className="text-sm text-gray-500">
               <span className="font-medium">Prioridad:</span> {getPriorityLabel(novedad.prioridad)}
             </p>
@@ -114,7 +114,7 @@ const NovedadesList = () => {
           onClick={closeModal}
         >
           <div
-            className="bg-white p-6 rounded shadow-lg max-w-lg w-full relative"
+            className="bg-white p-6 rounded-lg shadow-2xl max-w-lg w-full relative"
             onClick={(e) => e.stopPropagation()}
           >
             <button
@@ -124,15 +124,16 @@ const NovedadesList = () => {
               &times;
             </button>
             <h2 className="text-2xl font-bold mb-4">{selectedNovedad.titulo}</h2>
-            <p className="mb-4">{selectedNovedad.resumen}</p>
+            <p className="mb-4"> Resumen: {selectedNovedad.resumen}</p>
             <div className="mb-4">
               <span className="font-medium">Prioridad:</span> {getPriorityLabel(selectedNovedad.prioridad)}
             </div>
             <div className="mb-4">
               <span className="font-medium">Caduca:</span> {formatDate(selectedNovedad.fechacaducidad)}
             </div>
+            <hr className="my-4 border-gray-300" />
             <div
-              className="description-content"
+              className="description-content text-gray-700 leading-relaxed"
               style={{ whiteSpace: 'pre-wrap' }}
               dangerouslySetInnerHTML={{ __html: selectedNovedad.descripcion }}
             />
