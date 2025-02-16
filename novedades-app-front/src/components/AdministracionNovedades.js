@@ -14,9 +14,11 @@ const AdministracionNovedades = () => {
     descripcion: '',
     prioridad: '1',
     fechaCaducidad: '',
+    entidad_ids: []
   });
   const [novedades, setNovedades] = useState([]);
   const [editingNovedad, setEditingNovedad] = useState(null);
+  const [entidadesDisponibles, setEntidadesDisponibles] = useState([]);
 
   const fetchNovedades = async () => {
     try {
@@ -27,8 +29,18 @@ const AdministracionNovedades = () => {
     }
   };
 
+  const fetchEntidades = async () => {
+    try {
+      const response = await axios.get('http://localhost:3002/entidades');
+      setEntidadesDisponibles(response.data);
+    } catch (error) {
+      console.error('Error al obtener entidades:', error);
+    }
+  };
+
   useEffect(() => {
     fetchNovedades();
+    fetchEntidades();
 
     socket.on('novedadAgregada', (novedad) => {
       setNovedades((prev) => [...prev, novedad]);
@@ -58,7 +70,7 @@ const AdministracionNovedades = () => {
     try {
       const novedadParaEnviar = {
         ...nuevaNovedad,
-        prioridad: parseInt(nuevaNovedad.prioridad),
+        prioridad: parseInt(nuevaNovedad.prioridad)
       };
       await axios.post('http://localhost:3002/novedades', novedadParaEnviar);
       setNuevaNovedad({
@@ -67,7 +79,9 @@ const AdministracionNovedades = () => {
         descripcion: '',
         prioridad: '1',
         fechaCaducidad: '',
+        entidad_ids: []
       });
+      fetchNovedades();
     } catch (error) {
       console.error('Error al agregar novedad:', error);
     }
@@ -79,6 +93,7 @@ const AdministracionNovedades = () => {
       await axios.delete(`http://localhost:3002/novedades/${id}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
+      fetchNovedades();
     } catch (error) {
       console.error('Error al eliminar novedad:', error);
     }
@@ -91,13 +106,12 @@ const AdministracionNovedades = () => {
     return date.toISOString().split('T')[0];
   };
 
-  // Al hacer clic en editar, preparamos el objeto de edición
   const handleEditClick = (novedad) => {
     setEditingNovedad({
       ...novedad,
       prioridad: String(novedad.prioridad),
-      // Convertimos la fecha de "fechacaducidad" a "YYYY-MM-DD"
       fechaCaducidad: formatForInputDate(novedad.fechacaducidad),
+      entidad_ids: novedad.entidad_ids ? novedad.entidad_ids.map(String) : []
     });
   };
 
@@ -110,21 +124,27 @@ const AdministracionNovedades = () => {
     setEditingNovedad({ ...editingNovedad, descripcion: data });
   };
 
-  // Al enviar la edición, se incluye el token de autenticación
+  const handleEntidadSelectChange = (e) => {
+    const selected = Array.from(e.target.selectedOptions, option => option.value);
+    if (editingNovedad) {
+      setEditingNovedad({ ...editingNovedad, entidad_ids: selected });
+    } else {
+      setNuevaNovedad({ ...nuevaNovedad, entidad_ids: selected });
+    }
+  };
+
   const handleEditSubmit = async (e) => {
     e.preventDefault();
     try {
       const updatedNovedad = {
         ...editingNovedad,
-        prioridad: parseInt(editingNovedad.prioridad),
+        prioridad: parseInt(editingNovedad.prioridad)
       };
       const token = localStorage.getItem('token');
       await axios.put(`http://localhost:3002/novedades/${editingNovedad.id}`, updatedNovedad, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      setNovedades((prev) =>
-        prev.map((nov) => (nov.id === updatedNovedad.id ? updatedNovedad : nov))
-      );
+      fetchNovedades();
       setEditingNovedad(null);
     } catch (error) {
       console.error('Error al editar novedad:', error);
@@ -231,6 +251,23 @@ const AdministracionNovedades = () => {
             className="w-full px-3 py-2 border border-gray-300 rounded"
           />
         </div>
+        {/* Campo multi-select para asociar entidades */}
+        <div className="mb-4">
+          <label className="block mb-1">Entidades Asociadas</label>
+          <select
+            name="entidad_ids"
+            multiple
+            value={nuevaNovedad.entidad_ids}
+            onChange={handleEntidadSelectChange}
+            className="w-full px-3 py-2 border border-gray-300 rounded"
+          >
+            {entidadesDisponibles.map((entidad) => (
+              <option key={entidad.id} value={entidad.id}>
+                {entidad.nombre} ({entidad.tipo})
+              </option>
+            ))}
+          </select>
+        </div>
         <button type="submit" className="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700 transition">
           Agregar Novedad
         </button>
@@ -251,6 +288,25 @@ const AdministracionNovedades = () => {
             <p className="text-sm text-gray-500">
               <span className="font-medium">Caduca:</span> {formatDate(novedad.fechacaducidad)}
             </p>
+            {/* Mostrar chips de entidades asociadas */}
+            {novedad.entidad_ids && novedad.entidad_ids.length > 0 && (
+              <div className="flex flex-wrap gap-1 mt-2">
+                {novedad.entidad_ids.map((entId) => {
+                  const entidad = entidadesDisponibles.find(e => e.id === Number(entId));
+                  if (entidad) {
+                    return (
+                      <span
+                        key={entidad.id}
+                        className="bg-blue-100 text-blue-800 text-xs font-medium px-2 py-1 rounded-full"
+                      >
+                        {entidad.nombre} ({entidad.tipo})
+                      </span>
+                    );
+                  }
+                  return null;
+                })}
+              </div>
+            )}
             <div className="flex justify-end mt-2">
               <button
                 onClick={() => handleEditClick(novedad)}
@@ -339,6 +395,23 @@ const AdministracionNovedades = () => {
                   required
                   className="w-full px-3 py-2 border border-gray-300 rounded"
                 />
+              </div>
+              {/* Campo multi-select para editar entidades asociadas */}
+              <div className="mb-4">
+                <label className="block mb-1">Entidades Asociadas</label>
+                <select
+                  name="entidad_ids"
+                  multiple
+                  value={editingNovedad.entidad_ids || []}
+                  onChange={handleEntidadSelectChange}
+                  className="w-full px-3 py-2 border border-gray-300 rounded"
+                >
+                  {entidadesDisponibles.map((entidad) => (
+                    <option key={entidad.id} value={entidad.id}>
+                      {entidad.nombre} ({entidad.tipo})
+                    </option>
+                  ))}
+                </select>
               </div>
               <button type="submit" className="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700 transition">
                 Guardar Cambios

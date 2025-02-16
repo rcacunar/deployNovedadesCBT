@@ -1,4 +1,3 @@
-// src/components/NovedadesList.js
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { io } from 'socket.io-client';
@@ -7,11 +6,11 @@ const socket = io('http://localhost:3002');
 
 const getPriorityClasses = (prioridad) => {
   switch (prioridad) {
-    case 1: // Alta
+    case 1:
       return "bg-red-100 border-red-300";
-    case 2: // Media
+    case 2:
       return "bg-yellow-100 border-yellow-300";
-    case 3: // Baja
+    case 3:
       return "bg-green-100 border-green-300";
     default:
       return "bg-white";
@@ -31,7 +30,6 @@ const getPriorityLabel = (valor) => {
   }
 };
 
-// Función para formatear la fecha en formato DD/MM/YYYY
 const formatDate = (dateString) => {
   if (!dateString) return 'Fecha no disponible';
   const date = new Date(dateString);
@@ -39,12 +37,13 @@ const formatDate = (dateString) => {
   return date.toLocaleDateString('es-ES', {
     day: '2-digit',
     month: '2-digit',
-    year: 'numeric'
+    year: 'numeric',
   });
 };
 
 const NovedadesList = () => {
   const [novedades, setNovedades] = useState([]);
+  const [entidades, setEntidades] = useState([]);
   const [selectedNovedad, setSelectedNovedad] = useState(null);
 
   const fetchNovedades = async () => {
@@ -52,12 +51,22 @@ const NovedadesList = () => {
       const response = await axios.get('http://localhost:3002/novedades');
       setNovedades(response.data);
     } catch (error) {
-      console.error('Error al obtener las novedades:', error);
+      console.error('Error al obtener novedades:', error);
+    }
+  };
+
+  const fetchEntidades = async () => {
+    try {
+      const response = await axios.get('http://localhost:3002/entidades');
+      setEntidades(response.data);
+    } catch (error) {
+      console.error('Error al obtener entidades:', error);
     }
   };
 
   useEffect(() => {
     fetchNovedades();
+    fetchEntidades();
 
     socket.on('novedadAgregada', (novedad) => {
       setNovedades((prev) => [...prev, novedad]);
@@ -81,40 +90,54 @@ const NovedadesList = () => {
     setSelectedNovedad(null);
   };
 
-  // Filtrar las novedades no caducadas: se muestra solo si la fecha es mayor o igual a la fecha actual
-  const currentDate = new Date();
-  const validNovedades = novedades.filter(nov => new Date(nov.fechacaducidad) >= currentDate);
-
   return (
     <div className="p-6">
       <h1 className="text-3xl font-bold text-center mb-6">Novedades</h1>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {validNovedades.map((novedad) => (
+        {novedades.map((novedad) => (
           <div
             key={novedad.id}
             className={`cursor-pointer shadow rounded-lg p-4 border ${getPriorityClasses(novedad.prioridad)}`}
             onClick={() => handleCardClick(novedad)}
           >
             <h2 className="text-xl font-semibold mb-2">{novedad.titulo}</h2>
-            <p className="text-gray-700 mb-2">Resumen: {novedad.resumen}</p>
+            <p className="text-gray-700 mb-2">{novedad.resumen}</p>
             <p className="text-sm text-gray-500">
               <span className="font-medium">Prioridad:</span> {getPriorityLabel(novedad.prioridad)}
             </p>
             <p className="text-sm text-gray-500">
               <span className="font-medium">Caduca:</span> {formatDate(novedad.fechacaducidad)}
             </p>
+            {/* Mostrar chips de entidades asociadas */}
+            {novedad.entidad_ids && novedad.entidad_ids.length > 0 && (
+              <div className="flex flex-wrap gap-1 mt-2">
+                {novedad.entidad_ids.map((entId) => {
+                  const entidad = entidades.find(e => e.id === Number(entId));
+                  if (entidad) {
+                    return (
+                      <span
+                        key={entidad.id}
+                        className="bg-blue-100 text-blue-800 text-xs font-medium px-2 py-1 rounded-full"
+                      >
+                        {entidad.nombre} {entidad.tipo}
+                      </span>
+                    );
+                  }
+                  return null;
+                })}
+              </div>
+            )}
           </div>
         ))}
       </div>
 
-      {/* Modal: Popup para mostrar el contenido completo de la novedad */}
       {selectedNovedad && (
         <div
           className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50"
           onClick={closeModal}
         >
           <div
-            className="bg-white p-6 rounded-lg shadow-2xl max-w-lg w-full relative"
+            className="bg-white p-6 rounded shadow-lg max-w-lg w-full relative"
             onClick={(e) => e.stopPropagation()}
           >
             <button
@@ -124,16 +147,33 @@ const NovedadesList = () => {
               &times;
             </button>
             <h2 className="text-2xl font-bold mb-4">{selectedNovedad.titulo}</h2>
-            <p className="mb-4"> Resumen: {selectedNovedad.resumen}</p>
+            <p className="mb-4">{selectedNovedad.resumen}</p>
             <div className="mb-4">
               <span className="font-medium">Prioridad:</span> {getPriorityLabel(selectedNovedad.prioridad)}
             </div>
             <div className="mb-4">
               <span className="font-medium">Caduca:</span> {formatDate(selectedNovedad.fechacaducidad)}
             </div>
-            <hr className="my-4 border-gray-300" />
+            {selectedNovedad.entidad_ids && selectedNovedad.entidad_ids.length > 0 && (
+              <div className="flex flex-wrap gap-1 mb-4">
+                {selectedNovedad.entidad_ids.map((entId) => {
+                  const entidad = entidades.find(e => e.id === Number(entId));
+                  if (entidad) {
+                    return (
+                      <span
+                        key={entidad.id}
+                        className="bg-blue-100 text-blue-800 text-xs font-medium px-2 py-1 rounded-full"
+                      >
+                        {entidad.nombre} {entidad.tipo}
+                      </span>
+                    );
+                  }
+                  return null;
+                })}
+              </div>
+            )}
             <div
-              className="description-content text-gray-700 leading-relaxed"
+              className="description-content"
               style={{ whiteSpace: 'pre-wrap' }}
               dangerouslySetInnerHTML={{ __html: selectedNovedad.descripcion }}
             />

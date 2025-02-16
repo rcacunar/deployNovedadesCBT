@@ -5,6 +5,7 @@ import Navbar from './Navbar';
 import NovedadesList from './components/NovedadesList';
 import AdministracionNovedades from './components/AdministracionNovedades';
 import UserManagement from './UserManagement';
+import EntityManagement from './EntityManagement';
 import PrivateRoute from './PrivateRoute';
 import Login from './Login';
 
@@ -29,6 +30,14 @@ function App() {
             element={
               <PrivateRoute>
                 <UserManagement />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/entity-management"
+            element={
+              <PrivateRoute>
+                <EntityManagement />
               </PrivateRoute>
             }
           />

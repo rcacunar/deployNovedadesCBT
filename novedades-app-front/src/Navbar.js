@@ -8,7 +8,7 @@ const Navbar = () => {
 
   const handleLogout = () => {
     localStorage.removeItem('token');
-    navigate('/login'); // Redirige al login o a la página que desees
+    navigate('/login');
   };
 
   return (
@@ -25,11 +25,11 @@ const Navbar = () => {
           <Link to="/user-management" className="text-gray-300 hover:text-white mx-2">
             Gestión de Usuarios
           </Link>
+          <Link to="/entity-management" className="text-gray-300 hover:text-white mx-2">
+            Gestión de Entidades
+          </Link>
           {token ? (
-            <button 
-              onClick={handleLogout} 
-              className="text-gray-300 hover:text-white mx-2"
-            >
+            <button onClick={handleLogout} className="text-gray-300 hover:text-white mx-2">
               Cerrar sesión
             </button>
           ) : (
