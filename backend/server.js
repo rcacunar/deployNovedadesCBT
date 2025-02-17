@@ -4,7 +4,7 @@ const cors = require('cors');
 const { Pool } = require('pg');
 const http = require('http');
 const jwt = require('jsonwebtoken');
-const bcrypt = require('bcrypt');
+const bcrypt = require('bcryptjs');
 
 const JWT_SECRET = process.env.JWT_SECRET || 'Ip200.10.20.226';
 const SALT_ROUNDS = 10;
@@ -24,11 +24,11 @@ app.use(cors());
 app.use(express.json());
 
 const pool = new Pool({
-  user: 'postgres',
-  host: 'localhost',
-  database: 'cbt_utils',
-  password: 'tefasted1',
-  port: 5432,
+  user: process.env.POSTGRES_USER || 'postgres',
+  host: process.env.POSTGRES_HOST || 'localhost',
+  database: process.env.POSTGRES_DB || 'cbt_utils',
+  password: process.env.POSTGRES_PASSWORD || 'tefasted1',
+  port: process.env.POSTGRES_PORT ? Number(process.env.POSTGRES_PORT) : 5432,
 });
 
 // Middleware de autenticación JWT
