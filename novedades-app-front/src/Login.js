@@ -13,7 +13,7 @@ const Login = () => {
     e.preventDefault();
     try {
       // Realiza la petición a tu endpoint de login
-      const response = await axios.post('http://localhost:3002/login', { username, password });
+      const response = await axios.post(`${process.env.REACT_APP_BACKEND_URL}/login`, { username, password });
       // Guarda el token (por ejemplo, en localStorage)
       localStorage.setItem('token', response.data.token);
       // Redirige a la vista de administración
