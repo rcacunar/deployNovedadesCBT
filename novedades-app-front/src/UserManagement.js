@@ -1,18 +1,23 @@
 // src/UserManagement.js
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
+import { useConfig } from './ConfigContext';
 
 const UserManagement = () => {
+  const config = useConfig();
+  const backendUrl = config ? config.REACT_APP_BACKEND_URL : "";
   const [users, setUsers] = useState([]);
   const [newUser, setNewUser] = useState({ username: '', password: '' });
   const [editingUser, setEditingUser] = useState(null);
   const [editPassword, setEditPassword] = useState('');
+  const navigate = useNavigate();
 
   // Función para obtener usuarios, enviando el token en el header
   const fetchUsers = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/users`, {
+      const response = await axios.get(`${backendUrl}/users`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setUsers(response.data);
@@ -22,8 +27,10 @@ const UserManagement = () => {
   };
 
   useEffect(() => {
-    fetchUsers();
-  }, []);
+    if (backendUrl) {
+      fetchUsers();
+    }
+  }, [backendUrl]);
 
   // Manejo de cambios en el formulario para agregar usuario
   const handleNewUserChange = (e) => {
@@ -34,7 +41,7 @@ const UserManagement = () => {
   const handleAddUser = async (e) => {
     e.preventDefault();
     try {
-      await axios.post(`${process.env.REACT_APP_BACKEND_URL}/register`, newUser);
+      await axios.post(`${backendUrl}/register`, newUser);
       setNewUser({ username: '', password: '' });
       fetchUsers();
     } catch (error) {
@@ -46,7 +53,7 @@ const UserManagement = () => {
   const handleDeleteUser = async (userId) => {
     try {
       const token = localStorage.getItem('token');
-      await axios.delete(`${process.env.REACT_APP_BACKEND_URL}/users/${userId}`, {
+      await axios.delete(`${backendUrl}/users/${userId}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       fetchUsers();
@@ -58,7 +65,7 @@ const UserManagement = () => {
   // Abrir modal de edición para cambiar contraseña
   const handleEditClick = (user) => {
     setEditingUser(user);
-    setEditPassword(''); // inicializamos la contraseña en vacío
+    setEditPassword('');
   };
 
   // Manejar cambios en el input del modal de edición
@@ -73,7 +80,7 @@ const UserManagement = () => {
     try {
       const token = localStorage.getItem('token');
       await axios.put(
-        `${process.env.REACT_APP_BACKEND_URL}/users/${editingUser.id}`,
+        `${backendUrl}/users/${editingUser.id}`,
         { password: editPassword },
         { headers: { Authorization: `Bearer ${token}` } }
       );

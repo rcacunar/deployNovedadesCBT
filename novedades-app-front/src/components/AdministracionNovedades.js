@@ -4,10 +4,12 @@ import axios from 'axios';
 import { io } from 'socket.io-client';
 import { CKEditor } from '@ckeditor/ckeditor5-react';
 import ClassicEditor from '@ckeditor/ckeditor5-build-classic';
-
-const socket = io(process.env.REACT_APP_BACKEND_URL);
+import { useConfig } from '../ConfigContext';
 
 const AdministracionNovedades = () => {
+  const config = useConfig();
+  const backendUrl = config ? config.REACT_APP_BACKEND_URL : "";
+
   const [nuevaNovedad, setNuevaNovedad] = useState({
     titulo: '',
     resumen: '',
@@ -19,42 +21,56 @@ const AdministracionNovedades = () => {
   const [novedades, setNovedades] = useState([]);
   const [editingNovedad, setEditingNovedad] = useState(null);
   const [entidadesDisponibles, setEntidadesDisponibles] = useState([]);
+  const [socket, setSocket] = useState(null);
 
+  // Función para obtener novedades usando backendUrl
   const fetchNovedades = async () => {
     try {
-      const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/novedades`);
+      const response = await axios.get(`${backendUrl}/novedades`);
       setNovedades(response.data);
     } catch (error) {
       console.error('Error al obtener novedades:', error);
     }
   };
 
+  // Función para obtener entidades usando backendUrl
   const fetchEntidades = async () => {
     try {
-      const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/entidades`);
+      const response = await axios.get(`${backendUrl}/entidades`);
       setEntidadesDisponibles(response.data);
     } catch (error) {
       console.error('Error al obtener entidades:', error);
     }
   };
 
+  // Efecto para cargar datos cuando backendUrl esté disponible
   useEffect(() => {
-    fetchNovedades();
-    fetchEntidades();
+    if (backendUrl) {
+      fetchNovedades();
+      fetchEntidades();
+    }
+  }, [backendUrl]);
 
-    socket.on('novedadAgregada', (novedad) => {
-      setNovedades((prev) => [...prev, novedad]);
-    });
+  // Inicializar el socket dentro de useEffect para adaptarse a cambios en backendUrl
+  useEffect(() => {
+    if (backendUrl) {
+      const s = io(backendUrl);
+      setSocket(s);
 
-    socket.on('novedadEliminada', ({ id }) => {
-      setNovedades((prev) => prev.filter((nov) => nov.id !== parseInt(id)));
-    });
+      s.on('novedadAgregada', (novedad) => {
+        setNovedades((prev) => [...prev, novedad]);
+      });
+      s.on('novedadEliminada', ({ id }) => {
+        setNovedades((prev) => prev.filter((nov) => nov.id !== parseInt(id)));
+      });
 
-    return () => {
-      socket.off('novedadAgregada');
-      socket.off('novedadEliminada');
-    };
-  }, []);
+      return () => {
+        s.off('novedadAgregada');
+        s.off('novedadEliminada');
+        s.disconnect();
+      };
+    }
+  }, [backendUrl]);
 
   const handleInputChange = (e) => {
     setNuevaNovedad({ ...nuevaNovedad, [e.target.name]: e.target.value });
@@ -72,7 +88,7 @@ const AdministracionNovedades = () => {
         ...nuevaNovedad,
         prioridad: parseInt(nuevaNovedad.prioridad)
       };
-      await axios.post(`${process.env.REACT_APP_BACKEND_URL}/novedades`, novedadParaEnviar);
+      await axios.post(`${backendUrl}/novedades`, novedadParaEnviar);
       setNuevaNovedad({
         titulo: '',
         resumen: '',
@@ -90,7 +106,7 @@ const AdministracionNovedades = () => {
   const handleDelete = async (id) => {
     try {
       const token = localStorage.getItem('token');
-      await axios.delete(`${process.env.REACT_APP_BACKEND_URL}/novedades/${id}`, {
+      await axios.delete(`${backendUrl}/novedades/${id}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       fetchNovedades();
@@ -99,7 +115,7 @@ const AdministracionNovedades = () => {
     }
   };
 
-  // Función para formatear la fecha a "YYYY-MM-DD" para el input date
+  // Convierte la fecha al formato "YYYY-MM-DD" para el input type="date"
   const formatForInputDate = (dateString) => {
     if (!dateString) return '';
     const date = new Date(dateString);
@@ -141,7 +157,7 @@ const AdministracionNovedades = () => {
         prioridad: parseInt(editingNovedad.prioridad)
       };
       const token = localStorage.getItem('token');
-      await axios.put(`${process.env.REACT_APP_BACKEND_URL}/novedades/${editingNovedad.id}`, updatedNovedad, {
+      await axios.put(`${backendUrl}/novedades/${editingNovedad.id}`, updatedNovedad, {
         headers: { Authorization: `Bearer ${token}` },
       });
       fetchNovedades();
@@ -155,42 +171,11 @@ const AdministracionNovedades = () => {
     setEditingNovedad(null);
   };
 
-  const getPriorityClasses = (prioridad) => {
-    switch (prioridad) {
-      case 1:
-        return "bg-red-100 border-red-300";
-      case 2:
-        return "bg-yellow-100 border-yellow-300";
-      case 3:
-        return "bg-green-100 border-green-300";
-      default:
-        return "bg-white";
-    }
-  };
-
-  const getPriorityLabel = (valor) => {
-    switch (valor) {
-      case 1:
-        return 'Alta';
-      case 2:
-        return 'Media';
-      case 3:
-        return 'Baja';
-      default:
-        return valor;
-    }
-  };
-
-  const formatDate = (dateString) => {
-    if (!dateString) return 'Fecha no disponible';
-    const date = new Date(dateString);
-    if (isNaN(date.getTime())) return 'Fecha no válida';
-    return date.toLocaleDateString('es-ES', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-    });
-  };
+  // Filtrar novedades caducadas: mostrar solo las que tienen fechaCaducidad >= hoy
+  const today = new Date();
+  const novedadesValidas = novedades.filter(
+    (novedad) => new Date(novedad.fechacaducidad) >= today
+  );
 
   return (
     <div className="p-6">
@@ -275,7 +260,7 @@ const AdministracionNovedades = () => {
 
       {/* Listado de novedades */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {novedades.map((novedad) => (
+        {novedadesValidas.map((novedad) => (
           <div
             key={novedad.id}
             className={`cursor-pointer shadow rounded-lg p-4 border ${getPriorityClasses(novedad.prioridad)}`}

@@ -2,8 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { io } from 'socket.io-client';
-
-const socket = io(process.env.REACT_APP_BACKEND_URL);
+import { useConfig } from '../ConfigContext';
 
 const getPriorityClasses = (prioridad) => {
   switch (prioridad) {
@@ -43,32 +42,17 @@ const formatDate = (dateString) => {
 };
 
 const NovedadesList = () => {
+  const config = useConfig();
+  const backendUrl = config ? config.REACT_APP_BACKEND_URL : "";
   const [novedades, setNovedades] = useState([]);
   const [entidades, setEntidades] = useState([]);
   const [selectedNovedad, setSelectedNovedad] = useState(null);
 
-  const fetchNovedades = async () => {
-    try {
-      const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/novedades`);
-      setNovedades(response.data);
-    } catch (error) {
-      console.error('Error al obtener novedades:', error);
-    }
-  };
-
-  const fetchEntidades = async () => {
-    try {
-      const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/entidades`);
-      setEntidades(response.data);
-    } catch (error) {
-      console.error('Error al obtener entidades:', error);
-    }
-  };
-
+  // Inicializar el socket dentro de un useEffect, dependiente de backendUrl.
   useEffect(() => {
-    fetchNovedades();
-    fetchEntidades();
-
+    if (!backendUrl) return;
+    const socket = io(backendUrl);
+    
     socket.on('novedadAgregada', (novedad) => {
       setNovedades((prev) => [...prev, novedad]);
     });
@@ -77,11 +61,38 @@ const NovedadesList = () => {
       setNovedades((prev) => prev.filter((nov) => nov.id !== parseInt(id)));
     });
 
+    // Limpieza: desconectar el socket al desmontar o cambiar backendUrl
     return () => {
       socket.off('novedadAgregada');
       socket.off('novedadEliminada');
+      socket.disconnect();
     };
-  }, []);
+  }, [backendUrl]);
+
+  const fetchNovedades = async () => {
+    try {
+      const response = await axios.get(`${backendUrl}/novedades`);
+      setNovedades(response.data);
+    } catch (error) {
+      console.error('Error al obtener novedades:', error);
+    }
+  };
+
+  const fetchEntidades = async () => {
+    try {
+      const response = await axios.get(`${backendUrl}/entidades`);
+      setEntidades(response.data);
+    } catch (error) {
+      console.error('Error al obtener entidades:', error);
+    }
+  };
+
+  useEffect(() => {
+    if (backendUrl) {
+      fetchNovedades();
+      fetchEntidades();
+    }
+  }, [backendUrl]);
 
   const handleCardClick = (novedad) => {
     setSelectedNovedad(novedad);

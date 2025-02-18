@@ -1,8 +1,12 @@
 // src/EntityManagement.js
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
+import { useConfig } from '../ConfigContext';
 
 const EntityManagement = () => {
+  const config = useConfig();
+  const backendUrl = config ? config.REACT_APP_BACKEND_URL : "";
+
   // Estado para tipos de entidad
   const [types, setTypes] = useState([]);
   const [newType, setNewType] = useState({ nombre: '' });
@@ -14,7 +18,7 @@ const EntityManagement = () => {
   // Función para obtener tipos de entidad
   const fetchTypes = async () => {
     try {
-      const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/tipos_entidades`);
+      const response = await axios.get(`${backendUrl}/tipos_entidades`);
       setTypes(response.data);
     } catch (error) {
       console.error('Error al obtener tipos de entidad:', error);
@@ -24,7 +28,7 @@ const EntityManagement = () => {
   // Función para obtener entidades
   const fetchEntities = async () => {
     try {
-      const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/entidades`);
+      const response = await axios.get(`${backendUrl}/entidades`);
       setEntities(response.data);
     } catch (error) {
       console.error('Error al obtener entidades:', error);
@@ -32,9 +36,11 @@ const EntityManagement = () => {
   };
 
   useEffect(() => {
-    fetchTypes();
-    fetchEntities();
-  }, []);
+    if (backendUrl) {
+      fetchTypes();
+      fetchEntities();
+    }
+  }, [backendUrl]);
 
   // Handlers para tipos de entidad
   const handleNewTypeChange = (e) => {
@@ -45,7 +51,7 @@ const EntityManagement = () => {
     e.preventDefault();
     try {
       const token = localStorage.getItem('token');
-      await axios.post(`${process.env.REACT_APP_BACKEND_URL}/tipos_entidades`, newType, {
+      await axios.post(`${backendUrl}/tipos_entidades`, newType, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setNewType({ nombre: '' });
@@ -58,7 +64,7 @@ const EntityManagement = () => {
   const handleDeleteType = async (id) => {
     try {
       const token = localStorage.getItem('token');
-      await axios.delete(`${process.env.REACT_APP_BACKEND_URL}/tipos_entidades/${id}`, {
+      await axios.delete(`${backendUrl}/tipos_entidades/${id}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       fetchTypes();
@@ -76,7 +82,7 @@ const EntityManagement = () => {
     e.preventDefault();
     try {
       const token = localStorage.getItem('token');
-      await axios.post(`${process.env.REACT_APP_BACKEND_URL}/entidades`, newEntity, {
+      await axios.post(`${backendUrl}/entidades`, newEntity, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setNewEntity({ nombre: '', tipo_id: '' });
@@ -89,7 +95,7 @@ const EntityManagement = () => {
   const handleDeleteEntity = async (id) => {
     try {
       const token = localStorage.getItem('token');
-      await axios.delete(`${process.env.REACT_APP_BACKEND_URL}/entidades/${id}`, {
+      await axios.delete(`${backendUrl}/entidades/${id}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       fetchEntities();
@@ -189,7 +195,7 @@ const EntityManagement = () => {
               return (
                 <li key={entidad.id} className="flex justify-between items-center mb-2">
                   <span>
-                    {entidad.nombre}  {tipoEncontrado ? tipoEncontrado.nombre : ''}
+                    {entidad.nombre} - {tipoEncontrado ? tipoEncontrado.nombre : 'Sin Tipo'}
                   </span>
                   <button
                     onClick={() => handleDeleteEntity(entidad.id)}

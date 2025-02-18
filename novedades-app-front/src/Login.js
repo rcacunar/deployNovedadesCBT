@@ -2,8 +2,11 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
+import { useConfig } from './ConfigContext';
 
 const Login = () => {
+  const config = useConfig();
+  const backendUrl = config ? config.REACT_APP_BACKEND_URL : "";
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState(null);
@@ -12,11 +15,8 @@ const Login = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      // Realiza la petición a tu endpoint de login
-      const response = await axios.post(`${process.env.REACT_APP_BACKEND_URL}/login`, { username, password });
-      // Guarda el token (por ejemplo, en localStorage)
+      const response = await axios.post(`${backendUrl}/login`, { username, password });
       localStorage.setItem('token', response.data.token);
-      // Redirige a la vista de administración
       navigate('/admin');
     } catch (err) {
       setError('Credenciales incorrectas');
