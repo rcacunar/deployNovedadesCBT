@@ -1,3 +1,4 @@
+// src/components/NovedadesList.js
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { io } from 'socket.io-client';
@@ -90,11 +91,17 @@ const NovedadesList = () => {
     setSelectedNovedad(null);
   };
 
+  // Filtrar novedades caducadas: mostrar solo las que tienen fechaCaducidad >= hoy
+  const today = new Date();
+  const novedadesValidas = novedades.filter(
+    (novedad) => new Date(novedad.fechacaducidad) >= today
+  );
+
   return (
     <div className="p-6">
       <h1 className="text-3xl font-bold text-center mb-6">Novedades</h1>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {novedades.map((novedad) => (
+        {novedadesValidas.map((novedad) => (
           <div
             key={novedad.id}
             className={`cursor-pointer shadow rounded-lg p-4 border ${getPriorityClasses(novedad.prioridad)}`}
@@ -166,7 +173,6 @@ const NovedadesList = () => {
                 dangerouslySetInnerHTML={{ __html: selectedNovedad.descripcion }}
               />
             </div>
-            {/* Si deseas mostrar también los chips de entidades en el modal */}
             {selectedNovedad.entidad_ids && selectedNovedad.entidad_ids.length > 0 && (
               <div className="flex flex-wrap gap-1 mt-4">
                 {selectedNovedad.entidad_ids.map((entId) => {
