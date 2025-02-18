@@ -12,7 +12,7 @@ const UserManagement = () => {
   const fetchUsers = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.get('http://localhost:3002/users', {
+      const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/users`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setUsers(response.data);
@@ -34,7 +34,7 @@ const UserManagement = () => {
   const handleAddUser = async (e) => {
     e.preventDefault();
     try {
-      await axios.post('http://localhost:3002/register', newUser);
+      await axios.post(`${process.env.REACT_APP_BACKEND_URL}/register`, newUser);
       setNewUser({ username: '', password: '' });
       fetchUsers();
     } catch (error) {
@@ -46,7 +46,7 @@ const UserManagement = () => {
   const handleDeleteUser = async (userId) => {
     try {
       const token = localStorage.getItem('token');
-      await axios.delete(`http://localhost:3002/users/${userId}`, {
+      await axios.delete(`${process.env.REACT_APP_BACKEND_URL}/users/${userId}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       fetchUsers();
@@ -73,7 +73,7 @@ const UserManagement = () => {
     try {
       const token = localStorage.getItem('token');
       await axios.put(
-        `http://localhost:3002/users/${editingUser.id}`,
+        `${process.env.REACT_APP_BACKEND_URL}/users/${editingUser.id}`,
         { password: editPassword },
         { headers: { Authorization: `Bearer ${token}` } }
       );

@@ -14,7 +14,7 @@ const EntityManagement = () => {
   // Función para obtener tipos de entidad
   const fetchTypes = async () => {
     try {
-      const response = await axios.get('http://localhost:3002/tipos_entidades');
+      const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/tipos_entidades`);
       setTypes(response.data);
     } catch (error) {
       console.error('Error al obtener tipos de entidad:', error);
@@ -24,7 +24,7 @@ const EntityManagement = () => {
   // Función para obtener entidades
   const fetchEntities = async () => {
     try {
-      const response = await axios.get('http://localhost:3002/entidades');
+      const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/entidades`);
       setEntities(response.data);
     } catch (error) {
       console.error('Error al obtener entidades:', error);
@@ -45,7 +45,7 @@ const EntityManagement = () => {
     e.preventDefault();
     try {
       const token = localStorage.getItem('token');
-      await axios.post('http://localhost:3002/tipos_entidades', newType, {
+      await axios.post(`${process.env.REACT_APP_BACKEND_URL}/tipos_entidades`, newType, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setNewType({ nombre: '' });
@@ -58,7 +58,7 @@ const EntityManagement = () => {
   const handleDeleteType = async (id) => {
     try {
       const token = localStorage.getItem('token');
-      await axios.delete(`http://localhost:3002/tipos_entidades/${id}`, {
+      await axios.delete(`${process.env.REACT_APP_BACKEND_URL}/tipos_entidades/${id}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       fetchTypes();
@@ -76,7 +76,7 @@ const EntityManagement = () => {
     e.preventDefault();
     try {
       const token = localStorage.getItem('token');
-      await axios.post('http://localhost:3002/entidades', newEntity, {
+      await axios.post(`${process.env.REACT_APP_BACKEND_URL}/entidades`, newEntity, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setNewEntity({ nombre: '', tipo_id: '' });
@@ -89,7 +89,7 @@ const EntityManagement = () => {
   const handleDeleteEntity = async (id) => {
     try {
       const token = localStorage.getItem('token');
-      await axios.delete(`http://localhost:3002/entidades/${id}`, {
+      await axios.delete(`${process.env.REACT_APP_BACKEND_URL}/entidades/${id}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       fetchEntities();

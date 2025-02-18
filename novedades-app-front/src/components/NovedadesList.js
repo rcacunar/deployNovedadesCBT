@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { io } from 'socket.io-client';
 
-const socket = io('http://localhost:3002');
+const socket = io(process.env.REACT_APP_BACKEND_URL);
 
 const getPriorityClasses = (prioridad) => {
   switch (prioridad) {
@@ -48,7 +48,7 @@ const NovedadesList = () => {
 
   const fetchNovedades = async () => {
     try {
-      const response = await axios.get('http://localhost:3002/novedades');
+      const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/novedades`);
       setNovedades(response.data);
     } catch (error) {
       console.error('Error al obtener novedades:', error);
@@ -57,7 +57,7 @@ const NovedadesList = () => {
 
   const fetchEntidades = async () => {
     try {
-      const response = await axios.get('http://localhost:3002/entidades');
+      const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/entidades`);
       setEntidades(response.data);
     } catch (error) {
       console.error('Error al obtener entidades:', error);
@@ -132,64 +132,62 @@ const NovedadesList = () => {
       </div>
 
       {selectedNovedad && (
-  <div
-    className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50"
-    onClick={closeModal}
-  >
-    <div
-      className="bg-white p-6 rounded shadow-lg w-full max-w-md md:max-w-2xl lg:max-w-3xl mx-4"
-      onClick={(e) => e.stopPropagation()}
-    >
-      <button
-        className="absolute top-2 right-2 text-gray-500 hover:text-gray-700 text-2xl"
-        onClick={closeModal}
-      >
-        &times;
-      </button>
-      <h2 className="text-2xl font-bold mb-4 border-b border-gray-300 pb-2">
-        {selectedNovedad.titulo}
-      </h2>
-      <p className="mb-4 border-b border-gray-300 pb-2">
-        {selectedNovedad.resumen}
-      </p>
-      <div className="mb-4 border-b border-gray-300 pb-2">
-        <span className="font-medium">Prioridad:</span> {getPriorityLabel(selectedNovedad.prioridad)}
-      </div>
-      <div className="mb-4 border-b border-gray-300 pb-2">
-        <span className="font-medium">Caduca:</span> {formatDate(selectedNovedad.fechacaducidad)}
-      </div>
-      <div className="pt-2">
-        <span className="font-medium">Descripción:</span>
         <div
-          className="mt-1"
-          style={{ whiteSpace: 'pre-wrap' }}
-          dangerouslySetInnerHTML={{ __html: selectedNovedad.descripcion }}
-        />
-      </div>
-      {/* Si deseas mostrar también los chips de entidades en el modal */}
-      {selectedNovedad.entidad_ids && selectedNovedad.entidad_ids.length > 0 && (
-        <div className="flex flex-wrap gap-1 mt-4">
-          {selectedNovedad.entidad_ids.map((entId) => {
-            const entidad = entidades.find(e => e.id === Number(entId));
-            if (entidad) {
-              return (
-                <span
-                  key={entidad.id}
-                  className="bg-blue-100 text-blue-800 text-xs font-medium px-2 py-1 rounded-full"
-                >
-                  {entidad.nombre} ({entidad.tipo})
-                </span>
-              );
-            }
-            return null;
-          })}
+          className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50"
+          onClick={closeModal}
+        >
+          <div
+            className="bg-white p-6 rounded shadow-lg w-full max-w-md md:max-w-2xl lg:max-w-3xl mx-4"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              className="absolute top-2 right-2 text-gray-500 hover:text-gray-700 text-2xl"
+              onClick={closeModal}
+            >
+              &times;
+            </button>
+            <h2 className="text-2xl font-bold mb-4 border-b border-gray-300 pb-2">
+              {selectedNovedad.titulo}
+            </h2>
+            <p className="mb-4 border-b border-gray-300 pb-2">
+              {selectedNovedad.resumen}
+            </p>
+            <div className="mb-4 border-b border-gray-300 pb-2">
+              <span className="font-medium">Prioridad:</span> {getPriorityLabel(selectedNovedad.prioridad)}
+            </div>
+            <div className="mb-4 border-b border-gray-300 pb-2">
+              <span className="font-medium">Caduca:</span> {formatDate(selectedNovedad.fechacaducidad)}
+            </div>
+            <div className="pt-2">
+              <span className="font-medium">Descripción:</span>
+              <div
+                className="mt-1"
+                style={{ whiteSpace: 'pre-wrap' }}
+                dangerouslySetInnerHTML={{ __html: selectedNovedad.descripcion }}
+              />
+            </div>
+            {/* Si deseas mostrar también los chips de entidades en el modal */}
+            {selectedNovedad.entidad_ids && selectedNovedad.entidad_ids.length > 0 && (
+              <div className="flex flex-wrap gap-1 mt-4">
+                {selectedNovedad.entidad_ids.map((entId) => {
+                  const entidad = entidades.find(e => e.id === Number(entId));
+                  if (entidad) {
+                    return (
+                      <span
+                        key={entidad.id}
+                        className="bg-blue-100 text-blue-800 text-xs font-medium px-2 py-1 rounded-full"
+                      >
+                        {entidad.nombre} ({entidad.tipo})
+                      </span>
+                    );
+                  }
+                  return null;
+                })}
+              </div>
+            )}
+          </div>
         </div>
       )}
-    </div>
-  </div>
-)}
-
-
     </div>
   );
 };

@@ -5,7 +5,7 @@ import { io } from 'socket.io-client';
 import { CKEditor } from '@ckeditor/ckeditor5-react';
 import ClassicEditor from '@ckeditor/ckeditor5-build-classic';
 
-const socket = io('http://localhost:3002');
+const socket = io(process.env.REACT_APP_BACKEND_URL);
 
 const AdministracionNovedades = () => {
   const [nuevaNovedad, setNuevaNovedad] = useState({
@@ -22,7 +22,7 @@ const AdministracionNovedades = () => {
 
   const fetchNovedades = async () => {
     try {
-      const response = await axios.get('http://localhost:3002/novedades');
+      const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/novedades`);
       setNovedades(response.data);
     } catch (error) {
       console.error('Error al obtener novedades:', error);
@@ -31,7 +31,7 @@ const AdministracionNovedades = () => {
 
   const fetchEntidades = async () => {
     try {
-      const response = await axios.get('http://localhost:3002/entidades');
+      const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/entidades`);
       setEntidadesDisponibles(response.data);
     } catch (error) {
       console.error('Error al obtener entidades:', error);
@@ -72,7 +72,7 @@ const AdministracionNovedades = () => {
         ...nuevaNovedad,
         prioridad: parseInt(nuevaNovedad.prioridad)
       };
-      await axios.post('http://localhost:3002/novedades', novedadParaEnviar);
+      await axios.post(`${process.env.REACT_APP_BACKEND_URL}/novedades`, novedadParaEnviar);
       setNuevaNovedad({
         titulo: '',
         resumen: '',
@@ -90,7 +90,7 @@ const AdministracionNovedades = () => {
   const handleDelete = async (id) => {
     try {
       const token = localStorage.getItem('token');
-      await axios.delete(`http://localhost:3002/novedades/${id}`, {
+      await axios.delete(`${process.env.REACT_APP_BACKEND_URL}/novedades/${id}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       fetchNovedades();
@@ -141,7 +141,7 @@ const AdministracionNovedades = () => {
         prioridad: parseInt(editingNovedad.prioridad)
       };
       const token = localStorage.getItem('token');
-      await axios.put(`http://localhost:3002/novedades/${editingNovedad.id}`, updatedNovedad, {
+      await axios.put(`${process.env.REACT_APP_BACKEND_URL}/novedades/${editingNovedad.id}`, updatedNovedad, {
         headers: { Authorization: `Bearer ${token}` },
       });
       fetchNovedades();
