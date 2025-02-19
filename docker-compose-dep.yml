@@ -1,0 +1,46 @@
+version: "3.8"
+
+services:
+  db:
+    image: postgres:13-alpine
+    container_name: cbt_db
+    restart: always
+    environment:
+      POSTGRES_USER: "postgres"
+      POSTGRES_PASSWORD: "tefasted1"
+      POSTGRES_DB: "cbt_utils"
+    volumes:
+      - ./db/init:/docker-entrypoint-initdb.d  # Scripts de inicialización
+      - pgdata:/var/lib/postgresql/data
+    expose:
+      - "5432"
+
+  backend:
+    image: rcacunar/cbt_backend:latest
+    container_name: cbt_backend
+    restart: always
+    depends_on:
+      - db
+    environment:
+      POSTGRES_USER: "postgres"
+      POSTGRES_PASSWORD: "tefasted1"
+      POSTGRES_DB: "cbt_utils"
+      POSTGRES_HOST: "db"
+      POSTGRES_PORT: "5432"
+      JWT_SECRET: "Ip200.10.20.226"
+    expose:
+      - "3002"
+
+  frontend:
+    image: rcacunar/cbt_frontend:latest
+    container_name: cbt_frontend
+    restart: always
+    depends_on:
+      - backend
+    volumes:
+      - ./novedades-app-front/public/config.json:/usr/share/nginx/html/config.json
+    expose:
+      - "80"
+
+volumes:
+  pgdata:

@@ -1,7 +1,7 @@
 // src/EntityManagement.js
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-import { useConfig } from '../ConfigContext';
+import { useConfig } from './ConfigContext';
 
 const EntityManagement = () => {
   const config = useConfig();

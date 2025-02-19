@@ -177,6 +177,44 @@ const AdministracionNovedades = () => {
     (novedad) => new Date(novedad.fechacaducidad) >= today
   );
 
+  const getPriorityClasses = (prioridad) => {
+    switch (prioridad) {
+      case 1:
+        return "bg-red-100 border-red-300";
+      case 2:
+        return "bg-yellow-100 border-yellow-300";
+      case 3:
+        return "bg-green-100 border-green-300";
+      default:
+        return "bg-white";
+    }
+  };
+
+  const getPriorityLabel = (valor) => {
+    switch (valor) {
+      case 1:
+        return 'Alta';
+      case 2:
+        return 'Media';
+      case 3:
+        return 'Baja';
+      default:
+        return valor;
+    }
+  };
+
+  const formatDate = (dateString) => {
+    if (!dateString) return 'Fecha no disponible';
+    const date = new Date(dateString);
+    if (isNaN(date.getTime())) return 'Fecha no válida';
+    return date.toLocaleDateString('es-ES', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+    });
+  };
+
+
   return (
     <div className="p-6">
       <h1 className="text-3xl font-bold text-center mb-6">Administración de Novedades</h1>

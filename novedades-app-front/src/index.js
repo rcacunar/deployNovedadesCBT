@@ -5,11 +5,12 @@ import App from './App';
 import { ConfigProvider } from './ConfigContext';
 import reportWebVitals from './reportWebVitals';
 
-
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
   <React.StrictMode>
-    <App />
+    <ConfigProvider>
+      <App />
+    </ConfigProvider>
   </React.StrictMode>
 );
 
