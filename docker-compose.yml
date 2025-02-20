@@ -30,8 +30,8 @@ services:
       POSTGRES_HOST: "db"
       POSTGRES_PORT: "5432"
       JWT_SECRET: "Ip200.10.20.226"
-    ports:
-      - "3002:3002"
+    expose:
+      - "3002"
 
   frontend:
     build:
@@ -41,8 +41,10 @@ services:
     restart: always
     depends_on:
       - backend
-    ports:
-      - "80:80"
+    volumes:
+      - ./novedades-app-front/public/config.json:/usr/share/nginx/html/config.json
+    expose:
+      - "80"
 
 volumes:
   pgdata:
