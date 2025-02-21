@@ -61,10 +61,19 @@ const NovedadesList = () => {
       setNovedades((prev) => prev.filter((nov) => nov.id !== parseInt(id)));
     });
 
-    // Limpieza: desconectar el socket al desmontar o cambiar backendUrl
+    // Agregar listener para la edición
+    socket.on('novedadEditada', (updatedNovedad) => {
+      setNovedades((prev) =>
+        prev.map((nov) =>
+          nov.id === updatedNovedad.id ? updatedNovedad : nov
+        )
+      );
+    });
+
     return () => {
       socket.off('novedadAgregada');
       socket.off('novedadEliminada');
+      socket.off('novedadEditada');
       socket.disconnect();
     };
   }, [backendUrl]);
