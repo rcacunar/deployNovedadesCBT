@@ -13,8 +13,12 @@ sync_with_github:
           echo "Agregando remoto github..."
           git remote add github https://oauth2:${GITHUB_TOKEN}@github.com/rcacunar/deployNovedadesCBT.git
         fi
+    - echo "Obteniendo cambios más recientes de GitLab..."
+    - git fetch origin
+    - git checkout main  # Asegura estar en la rama correcta
+    - git pull origin main  # Trae los últimos cambios de GitLab
     - echo "Empujando cambios a GitHub..."
-    - git push github --all  # Empuja todas las ramas sin eliminarlas
-    - git push github --tags  # Sincroniza las etiquetas
+    - git push github main  # Solo push a la rama main
+    - git push github --tags  # Sincroniza etiquetas
   only:
     - main
