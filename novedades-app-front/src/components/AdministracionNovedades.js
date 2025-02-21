@@ -398,6 +398,7 @@ const AdministracionNovedades = () => {
                 />
               </div>
               <div className="mb-4">
+              <label className="block mb-1">Prioridad</label>
                 <select
                   name="prioridad"
                   value={editingNovedad.prioridad}
@@ -411,6 +412,7 @@ const AdministracionNovedades = () => {
                 </select>
               </div>
               <div className="mb-4">
+              <label className="block mb-1">Fecha Caducidad</label>
                 <input
                   type="date"
                   name="fechaCaducidad"
