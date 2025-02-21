@@ -4,8 +4,16 @@ stages:
 sync_with_github:
   stage: sync
   script:
-    - git remote add github https://oauth2:${GITHUB_TOKEN}@github.com/rcacunar/deployNovedadesCBT.git
+    - echo "Configurando acceso a GitHub..."
+    - |
+        if git remote | grep -q "github"; then
+          echo "Remoto github ya existe, actualizando URL..."
+          git remote set-url github https://oauth2:${GITHUB_TOKEN}@github.com/rcacunar/deployNovedadesCBT.git
+        else
+          echo "Agregando remoto github..."
+          git remote add github https://oauth2:${GITHUB_TOKEN}@github.com/rcacunar/deployNovedadesCBT.git
+        fi
+    - echo "Empujando cambios a GitHub..."
     - git push --mirror github
   only:
-    - branches
-
+    - main  # O reemplázalo con la rama que quieres sincronizar
