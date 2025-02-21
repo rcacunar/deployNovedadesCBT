@@ -56,17 +56,25 @@ const AdministracionNovedades = () => {
     if (backendUrl) {
       const s = io(backendUrl);
       setSocket(s);
-
+  
       s.on('novedadAgregada', (novedad) => {
         setNovedades((prev) => [...prev, novedad]);
       });
       s.on('novedadEliminada', ({ id }) => {
         setNovedades((prev) => prev.filter((nov) => nov.id !== parseInt(id)));
       });
-
+      s.on('novedadEditada', (updatedNovedad) => {
+        setNovedades((prev) =>
+          prev.map((nov) =>
+            nov.id === updatedNovedad.id ? updatedNovedad : nov
+          )
+        );
+      });
+  
       return () => {
         s.off('novedadAgregada');
         s.off('novedadEliminada');
+        s.off('novedadEditada');
         s.disconnect();
       };
     }

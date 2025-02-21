@@ -298,6 +298,7 @@ app.put('/novedades/:id', authenticateToken, async (req, res) => {
   if (!allowedPriorities.includes(prioridad))
     return res.status(400).json({ error: 'La prioridad debe ser 1, 2 o 3.' });
   try {
+    // Actualizar los datos básicos
     const query = `
       UPDATE cbt.novedades
       SET titulo = $1,
@@ -312,8 +313,7 @@ app.put('/novedades/:id', authenticateToken, async (req, res) => {
     const result = await pool.query(query, values);
     if (result.rowCount === 0)
       return res.status(404).json({ error: 'Novedad no encontrada' });
-    const updatedNovedad = result.rows[0];
-    // Actualizar asociaciones: primero borramos las existentes, luego insertamos las nuevas
+    // Actualizar asociaciones: primero borrar las existentes y luego insertarlas
     await pool.query('DELETE FROM cbt.novedades_entidades WHERE novedad_id = $1', [id]);
     if (entidad_ids && Array.isArray(entidad_ids)) {
       for (const entidadId of entidad_ids) {
@@ -323,6 +323,18 @@ app.put('/novedades/:id', authenticateToken, async (req, res) => {
         );
       }
     }
+    // Volver a consultar la novedad completa (incluyendo asociaciones)
+    const completeQuery = `
+      SELECT n.*,
+        COALESCE(json_agg(ne.entidad_id) FILTER (WHERE ne.entidad_id IS NOT NULL), '[]') AS entidad_ids
+      FROM cbt.novedades n
+      LEFT JOIN cbt.novedades_entidades ne ON n.id = ne.novedad_id
+      WHERE n.id = $1
+      GROUP BY n.id
+    `;
+    const completeResult = await pool.query(completeQuery, [id]);
+    const updatedNovedad = completeResult.rows[0];
+
     io.emit('novedadEditada', updatedNovedad);
     res.json(updatedNovedad);
   } catch (err) {
@@ -330,6 +342,7 @@ app.put('/novedades/:id', authenticateToken, async (req, res) => {
     res.status(500).json({ error: 'Error al editar novedad' });
   }
 });
+
 
 // Eliminar una novedad (protegido)
 app.delete('/novedades/:id', authenticateToken, async (req, res) => {
