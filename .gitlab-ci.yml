@@ -4,7 +4,7 @@ stages:
 sync_with_github:
   stage: sync
   script:
-    - git remote add github https://oauth2:${GITHUB_TOKEN}@github.com/rcacunar/centralcbt.git
+    - git remote add github https://oauth2:${GITHUB_TOKEN}@github.com/rcacunar/deployNovedadesCBT.git
     - git push --mirror github
   only:
     - branches
