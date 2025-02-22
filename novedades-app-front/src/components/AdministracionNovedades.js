@@ -20,7 +20,6 @@ const AdministracionNovedades = () => {
   });
   const [novedades, setNovedades] = useState([]);
   const [editingNovedad, setEditingNovedad] = useState(null);
-  const [types, setTypes] = useState([]);
   const [entidadesDisponibles, setEntidadesDisponibles] = useState([]);
   const [socket, setSocket] = useState(null);
 
@@ -34,16 +33,6 @@ const AdministracionNovedades = () => {
     }
   };
 
-  // Función para obtener tipos de entidad usando backendUrl
-  const fetchTypes = async () => {
-    try {
-      const response = await axios.get(`${backendUrl}/tipos_entidades`);
-      setTypes(response.data);
-    } catch (error) {
-      console.error('Error al obtener tipos de entidad:', error);
-    }
-  };
-
   // Función para obtener entidades usando backendUrl
   const fetchEntidades = async () => {
     try {
@@ -54,54 +43,41 @@ const AdministracionNovedades = () => {
     }
   };
 
-  // Cargar datos cuando backendUrl esté disponible
+  // Efecto para cargar datos cuando backendUrl esté disponible
   useEffect(() => {
     if (backendUrl) {
       fetchNovedades();
-      fetchTypes();
       fetchEntidades();
     }
   }, [backendUrl]);
 
-  // Inicializar el socket y sus listeners para sincronización en tiempo real
+  // Inicializar el socket dentro de useEffect para adaptarse a cambios en backendUrl
   useEffect(() => {
-    if (!backendUrl) return;
-    const s = io(backendUrl);
-    setSocket(s);
-
-    s.on('novedadAgregada', (novedad) => {
-      setNovedades((prev) => [...prev, novedad]);
-    });
-    s.on('novedadEliminada', ({ id }) => {
-      setNovedades((prev) => prev.filter((nov) => nov.id !== parseInt(id)));
-    });
-    s.on('novedadEditada', (updatedNovedad) => {
-      setNovedades((prev) =>
-        prev.map((nov) => (nov.id === updatedNovedad.id ? updatedNovedad : nov))
-      );
-    });
-    s.on('tipoEntidadEditado', (updatedType) => {
-      // Actualiza la lista de tipos
-      setTypes((prevTypes) =>
-        prevTypes.map((tipo) => (tipo.id === updatedType.id ? updatedType : tipo))
-      );
-      // Refrescar entidades para actualizar la información del tipo
-      fetchEntidades();
-    });
-    s.on('entidadEditada', (updatedEntity) => {
-      setEntidadesDisponibles((prevEntities) =>
-        prevEntities.map((ent) => (ent.id === updatedEntity.id ? updatedEntity : ent))
-      );
-    });
-
-    return () => {
-      s.off('novedadAgregada');
-      s.off('novedadEliminada');
-      s.off('novedadEditada');
-      s.off('tipoEntidadEditado');
-      s.off('entidadEditada');
-      s.disconnect();
-    };
+    if (backendUrl) {
+      const s = io(backendUrl);
+      setSocket(s);
+  
+      s.on('novedadAgregada', (novedad) => {
+        setNovedades((prev) => [...prev, novedad]);
+      });
+      s.on('novedadEliminada', ({ id }) => {
+        setNovedades((prev) => prev.filter((nov) => nov.id !== parseInt(id)));
+      });
+      s.on('novedadEditada', (updatedNovedad) => {
+        setNovedades((prev) =>
+          prev.map((nov) =>
+            nov.id === updatedNovedad.id ? updatedNovedad : nov
+          )
+        );
+      });
+  
+      return () => {
+        s.off('novedadAgregada');
+        s.off('novedadEliminada');
+        s.off('novedadEditada');
+        s.disconnect();
+      };
+    }
   }, [backendUrl]);
 
   const handleInputChange = (e) => {
@@ -209,6 +185,44 @@ const AdministracionNovedades = () => {
     (novedad) => new Date(novedad.fechacaducidad) >= today
   );
 
+  const getPriorityClasses = (prioridad) => {
+    switch (prioridad) {
+      case 1:
+        return "bg-red-100 border-red-300";
+      case 2:
+        return "bg-yellow-100 border-yellow-300";
+      case 3:
+        return "bg-green-100 border-green-300";
+      default:
+        return "bg-white";
+    }
+  };
+
+  const getPriorityLabel = (valor) => {
+    switch (valor) {
+      case 1:
+        return 'Alta';
+      case 2:
+        return 'Media';
+      case 3:
+        return 'Baja';
+      default:
+        return valor;
+    }
+  };
+
+  const formatDate = (dateString) => {
+    if (!dateString) return 'Fecha no disponible';
+    const date = new Date(dateString);
+    if (isNaN(date.getTime())) return 'Fecha no válida';
+    return date.toLocaleDateString('es-ES', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+    });
+  };
+
+
   return (
     <div className="p-6">
       <h1 className="text-3xl font-bold text-center mb-6">Administración de Novedades</h1>
@@ -245,7 +259,7 @@ const AdministracionNovedades = () => {
           />
         </div>
         <div className="mb-4">
-          <label className="block mb-1">Prioridad</label>
+        <label className="block mb-1">Prioridad</label>
           <select
             name="prioridad"
             value={nuevaNovedad.prioridad}
@@ -259,7 +273,7 @@ const AdministracionNovedades = () => {
           </select>
         </div>
         <div className="mb-4">
-          <label className="block mb-1">Fecha Caducidad</label>
+        <label className="block mb-1">Fecha Caducidad</label>
           <input
             type="date"
             name="fechaCaducidad"
@@ -297,20 +311,20 @@ const AdministracionNovedades = () => {
         {novedadesValidas.map((novedad) => (
           <div
             key={novedad.id}
-            className={`cursor-pointer shadow rounded-lg p-4 border ${localGetPriorityClasses(novedad.prioridad)}`}
+            className={`cursor-pointer shadow rounded-lg p-4 border ${getPriorityClasses(novedad.prioridad)}`}
           >
             <h2 className="text-xl font-semibold mb-2">{novedad.titulo}</h2>
             <p className="text-gray-700 mb-2">{novedad.resumen}</p>
             <p className="text-sm text-gray-500">
-              <span className="font-medium">Prioridad:</span> {localGetPriorityLabel(novedad.prioridad)}
+              <span className="font-medium">Prioridad:</span> {getPriorityLabel(novedad.prioridad)}
             </p>
             <p className="text-sm text-gray-500">
-              <span className="font-medium">Caduca:</span> {localFormatDate(novedad.fechacaducidad)}
+              <span className="font-medium">Caduca:</span> {formatDate(novedad.fechacaducidad)}
             </p>
             {/* Mostrar chips de entidades asociadas */}
-            {novedades.entidad_ids && novedad.entidad_ids.length > 0 && (
+            {novedad.entidad_ids && novedad.entidad_ids.length > 0 && (
               <div className="flex flex-wrap gap-1 mt-2">
-                {novedades.entidad_ids.map((entId) => {
+                {novedad.entidad_ids.map((entId) => {
                   const entidad = entidadesDisponibles.find(e => e.id === Number(entId));
                   if (entidad) {
                     return (
@@ -392,7 +406,7 @@ const AdministracionNovedades = () => {
                 />
               </div>
               <div className="mb-4">
-                <label className="block mb-1">Prioridad</label>
+              <label className="block mb-1">Prioridad</label>
                 <select
                   name="prioridad"
                   value={editingNovedad.prioridad}
@@ -406,7 +420,7 @@ const AdministracionNovedades = () => {
                 </select>
               </div>
               <div className="mb-4">
-                <label className="block mb-1">Fecha Caducidad</label>
+              <label className="block mb-1">Fecha Caducidad</label>
                 <input
                   type="date"
                   name="fechaCaducidad"
@@ -445,4 +459,4 @@ const AdministracionNovedades = () => {
   );
 };
 
-export default EntityManagement;
+export default AdministracionNovedades;
