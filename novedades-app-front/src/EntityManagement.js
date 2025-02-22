@@ -189,9 +189,10 @@ const EntityManagement = () => {
         ) : (
           <ul>
             {entities.map((entidad) => {
-              const tipoEncontrado = types.find(
+              // Asegurarse de que types esté cargado para buscar el nombre del tipo
+              const tipoEncontrado = types.length > 0 ? types.find(
                 (tipo) => Number(tipo.id) === Number(entidad.tipo_id)
-              );
+              ) : null;
               return (
                 <li key={entidad.id} className="flex justify-between items-center mb-2">
                   <span>
