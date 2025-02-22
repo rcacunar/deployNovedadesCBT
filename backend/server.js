@@ -191,15 +191,16 @@ app.put('/tipos_entidades/:id', authenticateToken, async (req, res) => {
   try {
     const query = 'UPDATE cbt.tipos_entidades SET nombre = $1 WHERE id = $2 RETURNING *';
     const result = await pool.query(query, [nombre, id]);
-    if (result.rowCount === 0)
-      return res.status(404).json({ error: 'Tipo de entidad no encontrado.' });
-    io.emit('tipoEntidadEditado', result.rows[0]); // Si deseas notificar cambios de tipo
+    if (result.rowCount === 0) return res.status(404).json({ error: 'Tipo de entidad no encontrado.' });
+    // Emitir el evento con el tipo actualizado
+    io.emit('tipoEntidadEditado', result.rows[0]);
     res.json(result.rows[0]);
   } catch (err) {
     console.error('Error al editar tipo de entidad:', err);
     res.status(500).json({ error: 'Error al editar tipo de entidad' });
   }
 });
+
 
 
 // ==========================
@@ -251,6 +252,7 @@ app.put('/entidades/:id', authenticateToken, async (req, res) => {
     const result = await pool.query(query, [nombre, tipo_id, id]);
     if (result.rowCount === 0)
       return res.status(404).json({ error: 'Entidad no encontrada.' });
+    // Emitir el evento con la entidad actualizada
     io.emit('entidadEditada', result.rows[0]);
     res.json(result.rows[0]);
   } catch (err) {
@@ -258,6 +260,7 @@ app.put('/entidades/:id', authenticateToken, async (req, res) => {
     res.status(500).json({ error: 'Error al editar entidad' });
   }
 });
+
 
 
 // Eliminar entidad (protegido)

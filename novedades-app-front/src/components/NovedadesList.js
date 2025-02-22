@@ -6,27 +6,19 @@ import { useConfig } from '../ConfigContext';
 
 const getPriorityClasses = (prioridad) => {
   switch (prioridad) {
-    case 1:
-      return "bg-red-100 border-red-300";
-    case 2:
-      return "bg-yellow-100 border-yellow-300";
-    case 3:
-      return "bg-green-100 border-green-300";
-    default:
-      return "bg-white";
+    case 1: return "bg-red-100 border-red-300";
+    case 2: return "bg-yellow-100 border-yellow-300";
+    case 3: return "bg-green-100 border-green-300";
+    default: return "bg-white";
   }
 };
 
 const getPriorityLabel = (valor) => {
   switch (valor) {
-    case 1:
-      return 'Alta';
-    case 2:
-      return 'Media';
-    case 3:
-      return 'Baja';
-    default:
-      return valor;
+    case 1: return 'Alta';
+    case 2: return 'Media';
+    case 3: return 'Baja';
+    default: return valor;
   }
 };
 
@@ -48,7 +40,7 @@ const NovedadesList = () => {
   const [entidades, setEntidades] = useState([]);
   const [selectedNovedad, setSelectedNovedad] = useState(null);
 
-  // Inicializar el socket dentro de un useEffect, dependiente de backendUrl.
+  // Inicializar el socket dentro de un useEffect
   useEffect(() => {
     if (!backendUrl) return;
     const socket = io(backendUrl);
@@ -56,24 +48,33 @@ const NovedadesList = () => {
     socket.on('novedadAgregada', (novedad) => {
       setNovedades((prev) => [...prev, novedad]);
     });
-
     socket.on('novedadEliminada', ({ id }) => {
       setNovedades((prev) => prev.filter((nov) => nov.id !== parseInt(id)));
     });
-
-    // Agregar listener para la edición
+    // Listener para ediciones de novedades (si se edita la novedad en sí)
     socket.on('novedadEditada', (updatedNovedad) => {
       setNovedades((prev) =>
-        prev.map((nov) =>
-          nov.id === updatedNovedad.id ? updatedNovedad : nov
-        )
+        prev.map((nov) => (nov.id === updatedNovedad.id ? updatedNovedad : nov))
       );
+    });
+    // Listener para ediciones de entidades: cuando se actualice una entidad, refetch o actualizar el estado local
+    socket.on('entidadEditada', (updatedEntity) => {
+      setEntidades((prev) =>
+        prev.map((ent) => (ent.id === updatedEntity.id ? updatedEntity : ent))
+      );
+    });
+    // Listener para ediciones de tipos: para cambios en los nombres de los tipos, refetch la lista de entidades (o actualízala manualmente)
+    socket.on('tipoEntidadEditado', (updatedType) => {
+      // Opción: volver a obtener la lista de entidades para que se actualicen los nombres
+      fetchEntidades();
     });
 
     return () => {
       socket.off('novedadAgregada');
       socket.off('novedadEliminada');
       socket.off('novedadEditada');
+      socket.off('entidadEditada');
+      socket.off('tipoEntidadEditado');
       socket.disconnect();
     };
   }, [backendUrl]);
