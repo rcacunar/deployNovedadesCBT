@@ -183,6 +183,25 @@ app.delete('/tipos_entidades/:id', authenticateToken, async (req, res) => {
   }
 });
 
+// Editar un tipo de entidad (protegido)
+app.put('/tipos_entidades/:id', authenticateToken, async (req, res) => {
+  const { id } = req.params;
+  const { nombre } = req.body;
+  if (!nombre) return res.status(400).json({ error: 'El nombre es requerido.' });
+  try {
+    const query = 'UPDATE cbt.tipos_entidades SET nombre = $1 WHERE id = $2 RETURNING *';
+    const result = await pool.query(query, [nombre, id]);
+    if (result.rowCount === 0)
+      return res.status(404).json({ error: 'Tipo de entidad no encontrado.' });
+    io.emit('tipoEntidadEditado', result.rows[0]); // Si deseas notificar cambios de tipo
+    res.json(result.rows[0]);
+  } catch (err) {
+    console.error('Error al editar tipo de entidad:', err);
+    res.status(500).json({ error: 'Error al editar tipo de entidad' });
+  }
+});
+
+
 // ==========================
 // Rutas de Entidades
 // ==========================
@@ -220,6 +239,26 @@ app.post('/entidades', authenticateToken, async (req, res) => {
     res.status(500).json({ error: 'Error al agregar entidad' });
   }
 });
+
+// Editar una entidad (protegido)
+app.put('/entidades/:id', authenticateToken, async (req, res) => {
+  const { id } = req.params;
+  const { nombre, tipo_id } = req.body;
+  if (!nombre || !tipo_id)
+    return res.status(400).json({ error: 'El nombre y tipo_id son requeridos.' });
+  try {
+    const query = 'UPDATE cbt.entidades SET nombre = $1, tipo_id = $2 WHERE id = $3 RETURNING *';
+    const result = await pool.query(query, [nombre, tipo_id, id]);
+    if (result.rowCount === 0)
+      return res.status(404).json({ error: 'Entidad no encontrada.' });
+    io.emit('entidadEditada', result.rows[0]);
+    res.json(result.rows[0]);
+  } catch (err) {
+    console.error('Error al editar entidad:', err);
+    res.status(500).json({ error: 'Error al editar entidad' });
+  }
+});
+
 
 // Eliminar entidad (protegido)
 app.delete('/entidades/:id', authenticateToken, async (req, res) => {
