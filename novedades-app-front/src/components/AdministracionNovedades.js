@@ -54,7 +54,7 @@ const AdministracionNovedades = () => {
     }
   };
 
-  // Cargar datos al tener backendUrl disponible
+  // Cargar datos cuando backendUrl esté disponible
   useEffect(() => {
     if (backendUrl) {
       fetchNovedades();
@@ -63,7 +63,7 @@ const AdministracionNovedades = () => {
     }
   }, [backendUrl]);
 
-  // Inicializar socket y sus listeners para sincronización en tiempo real
+  // Inicializar el socket y sus listeners para sincronización en tiempo real
   useEffect(() => {
     if (!backendUrl) return;
     const s = io(backendUrl);
@@ -83,18 +83,14 @@ const AdministracionNovedades = () => {
     s.on('tipoEntidadEditado', (updatedType) => {
       // Actualiza la lista de tipos
       setTypes((prevTypes) =>
-        prevTypes.map((tipo) =>
-          tipo.id === updatedType.id ? updatedType : tipo
-        )
+        prevTypes.map((tipo) => (tipo.id === updatedType.id ? updatedType : tipo))
       );
-      // Como los tipos se usan para renderizar entidades, refetch de entidades es opcional
+      // Refrescar entidades para actualizar la información del tipo
       fetchEntidades();
     });
     s.on('entidadEditada', (updatedEntity) => {
       setEntidadesDisponibles((prevEntities) =>
-        prevEntities.map((ent) =>
-          ent.id === updatedEntity.id ? updatedEntity : ent
-        )
+        prevEntities.map((ent) => (ent.id === updatedEntity.id ? updatedEntity : ent))
       );
     });
 
@@ -213,44 +209,6 @@ const AdministracionNovedades = () => {
     (novedad) => new Date(novedad.fechacaducidad) >= today
   );
 
-  // Funciones de utilería para prioridad y formato de fecha (puedes usar las ya definidas en otros módulos)
-  const localGetPriorityClasses = (prioridad) => {
-    switch (prioridad) {
-      case 1:
-        return "bg-red-100 border-red-300";
-      case 2:
-        return "bg-yellow-100 border-yellow-300";
-      case 3:
-        return "bg-green-100 border-green-300";
-      default:
-        return "bg-white";
-    }
-  };
-
-  const localGetPriorityLabel = (valor) => {
-    switch (valor) {
-      case 1:
-        return 'Alta';
-      case 2:
-        return 'Media';
-      case 3:
-        return 'Baja';
-      default:
-        return valor;
-    }
-  };
-
-  const localFormatDate = (dateString) => {
-    if (!dateString) return 'Fecha no disponible';
-    const date = new Date(dateString);
-    if (isNaN(date.getTime())) return 'Fecha no válida';
-    return date.toLocaleDateString('es-ES', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-    });
-  };
-
   return (
     <div className="p-6">
       <h1 className="text-3xl font-bold text-center mb-6">Administración de Novedades</h1>
@@ -340,7 +298,6 @@ const AdministracionNovedades = () => {
           <div
             key={novedad.id}
             className={`cursor-pointer shadow rounded-lg p-4 border ${localGetPriorityClasses(novedad.prioridad)}`}
-            onClick={() => handleCardClick(novedad)}
           >
             <h2 className="text-xl font-semibold mb-2">{novedad.titulo}</h2>
             <p className="text-gray-700 mb-2">{novedad.resumen}</p>
@@ -351,9 +308,9 @@ const AdministracionNovedades = () => {
               <span className="font-medium">Caduca:</span> {localFormatDate(novedad.fechacaducidad)}
             </p>
             {/* Mostrar chips de entidades asociadas */}
-            {novedad.entidad_ids && novedad.entidad_ids.length > 0 && (
+            {novedades.entidad_ids && novedad.entidad_ids.length > 0 && (
               <div className="flex flex-wrap gap-1 mt-2">
-                {novedad.entidad_ids.map((entId) => {
+                {novedades.entidad_ids.map((entId) => {
                   const entidad = entidadesDisponibles.find(e => e.id === Number(entId));
                   if (entidad) {
                     return (
@@ -488,4 +445,4 @@ const AdministracionNovedades = () => {
   );
 };
 
-export default AdministracionNovedades;
+export default EntityManagement;
