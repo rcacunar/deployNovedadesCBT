@@ -286,7 +286,7 @@ const EntityManagement = () => {
               return (
                 <li key={entidad.id} className="flex justify-between items-center mb-2">
                   <span>
-                    {entidad.nombre} - {tipoEncontrado ? tipoEncontrado.nombre : 'Sin Tipo'}
+                  {entidad.nombre} ({entidad.tipo})
                   </span>
                   <div>
                     <button
